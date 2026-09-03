@@ -1,1 +1,685 @@
+<!DOCTYPE html>
+<html lang="lv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Radio Liepāja — Raidījumu grafiks</title>
+<style>
+  :root{
+    --ink:#1a2b32;--ink-soft:#3d5560;--sand:#f2ede3;--sand-line:#e2d9c8;
+    --paper:#faf7f0;--sea:#0f6d78;--sea-deep:#0a4c54;--amber:#e08a2b;
+    --coral:#d15a3f;--shadow:rgba(15,45,50,.10);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+    background:var(--sand);color:var(--ink);line-height:1.5;padding:0 0 60px}
 
+  header{background:var(--sea-deep);color:var(--paper);padding:22px 28px 20px;
+    display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:16px;
+    border-bottom:3px solid var(--amber)}
+  .brand{display:flex;align-items:baseline;gap:14px}
+  .wave{width:38px;height:26px;flex:none;align-self:center}
+  .wave path{stroke:var(--amber);stroke-width:2.4;fill:none;stroke-linecap:round}
+  .brand h1{font-size:1.42rem;font-weight:700;letter-spacing:-.01em;line-height:1}
+  .brand .sub{font-size:.72rem;color:#9fc4c8;letter-spacing:.14em;text-transform:uppercase;margin-top:5px}
+  .hright{display:flex;align-items:center;gap:16px}
+  .clock{text-align:right;font-size:.8rem;color:#9fc4c8}
+  .clock b{display:block;color:var(--paper);font-size:1.05rem;font-weight:600}
+  .loginlink{background:none;border:1px solid #2e6a72;color:#cfe6e8;padding:7px 14px;
+    border-radius:8px;font-size:.82rem;cursor:pointer;font-weight:600}
+  .loginlink:hover{background:#0d5d66}
+  .loginlink.admin{background:var(--amber);border-color:var(--amber);color:#3a2410}
+
+  .toolbar{background:var(--paper);padding:14px 28px;display:flex;align-items:center;gap:14px;
+    flex-wrap:wrap;border-bottom:1px solid var(--sand-line);position:sticky;top:0;z-index:20;
+    box-shadow:0 2px 10px var(--shadow)}
+  .monthnav{display:flex;align-items:center;gap:8px}
+  .monthnav button{width:32px;height:32px;border:1px solid var(--sand-line);background:var(--sand);
+    color:var(--ink);border-radius:8px;font-size:1rem;cursor:pointer;line-height:1}
+  .monthnav button:hover{background:var(--sand-line)}
+  .monthnav .label{font-size:1.06rem;font-weight:700;min-width:150px;text-align:center;text-transform:capitalize}
+  .spacer{flex:1 1 auto}
+  .seg{display:flex;border:1px solid var(--sand-line);border-radius:8px;overflow:hidden}
+  .seg button{border:none;background:var(--paper);padding:7px 15px;font-size:.85rem;cursor:pointer;
+    color:var(--ink-soft);font-weight:600}
+  .seg button.on{background:var(--sea);color:#fff}
+  .filterwrap{position:relative}
+  .filterbtn{border:1px solid var(--sand-line);background:var(--paper);padding:7px 14px;border-radius:8px;
+    font-size:.85rem;cursor:pointer;font-weight:600;color:var(--ink-soft);display:flex;align-items:center;gap:7px}
+  .filterbtn .dot{width:8px;height:8px;border-radius:50%;background:var(--coral);display:none}
+  .filterbtn.active .dot{display:block}
+  .filtermenu{position:absolute;right:0;top:calc(100% + 6px);background:var(--paper);
+    border:1px solid var(--sand-line);border-radius:10px;box-shadow:0 8px 26px var(--shadow);
+    padding:12px;min-width:210px;display:none;z-index:30}
+  .filtermenu.open{display:block}
+  .filtermenu h4{font-size:.7rem;letter-spacing:.1em;color:var(--ink-soft);text-transform:uppercase;
+    margin-bottom:9px;font-weight:700}
+  .fitem{display:flex;align-items:center;gap:9px;padding:5px 4px;cursor:pointer;border-radius:6px;font-size:.88rem}
+  .fitem:hover{background:var(--sand)}
+  .fitem .sw{width:13px;height:13px;border-radius:4px;flex:none}
+  .fitem input{margin-left:auto;accent-color:var(--sea)}
+  .search{border:1px solid var(--sand-line);background:var(--paper);padding:7px 12px;border-radius:8px;
+    font-size:.85rem;width:180px;color:var(--ink)}
+  .search:focus{outline:2px solid var(--sea);outline-offset:-1px}
+
+  .adminbar{background:#fff5e6;border-bottom:1px solid #f0dcb8;padding:8px 28px;display:none;
+    align-items:center;gap:14px;font-size:.82rem;color:#7a4d15}
+  .adminbar.show{display:flex}
+  .adminbar b{color:#3a2410}
+  .adminbar .dirty{color:var(--coral);font-weight:700;display:none}
+  .adminbar .dirty.show{display:inline}
+  .adminbar .acts{margin-left:auto;display:flex;gap:8px}
+  .adminbar button{border:1px solid #e0c48a;background:#fff;color:#7a4d15;padding:6px 13px;
+    border-radius:7px;font-size:.8rem;cursor:pointer;font-weight:600}
+  .adminbar button.save{background:var(--sea);border-color:var(--sea);color:#fff}
+  .adminbar button.save:hover{background:var(--sea-deep)}
+
+  .wrap{padding:20px 28px 0}
+  .weekhead{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px}
+  .weekhead span{font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--ink-soft);padding:0 4px}
+  .weekhead span.we{color:var(--coral)}
+  .month{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+  .cell{background:var(--paper);border:1px solid var(--sand-line);border-radius:9px;min-height:118px;
+    padding:7px 7px 6px;display:flex;flex-direction:column;gap:4px}
+  .cell.dim{background:#f6f2ea;opacity:.55}
+  .cell.today{border-color:var(--sea);box-shadow:inset 0 0 0 1px var(--sea)}
+  .cell .dnum{font-size:.82rem;font-weight:700;color:var(--ink-soft);display:flex;
+    justify-content:space-between;align-items:center}
+  .cell.today .dnum{color:var(--sea)}
+  .cell .addbtn{border:none;background:none;color:var(--sea);font-size:1.1rem;line-height:1;
+    cursor:pointer;padding:0 3px;display:none;border-radius:4px}
+  .admin .cell .addbtn{display:block}
+  .cell .addbtn:hover{background:var(--sand)}
+  .shows{display:flex;flex-direction:column;gap:3px;overflow:hidden}
+  .show{border-radius:5px;padding:3px 6px;font-size:.74rem;line-height:1.25;cursor:pointer;
+    border-left:3px solid;background:var(--sand);color:var(--ink);position:relative}
+  .show .t{font-weight:700;font-size:.68rem;opacity:.85}
+  .show .n{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .show .h{font-size:.68rem;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cell.draghover{border-color:var(--amber);box-shadow:inset 0 0 0 2px var(--amber)}
+  .admin .show{cursor:grab}
+
+  .list{display:none;flex-direction:column;gap:2px;max-width:900px}
+  .list.on{display:flex}
+  .month.off,.weekhead.off{display:none}
+  .daygroup{margin-top:14px}
+  .daygroup:first-child{margin-top:0}
+  .daygroup h3{font-size:.82rem;font-weight:700;color:var(--sea-deep);padding:6px 0;
+    border-bottom:2px solid var(--sand-line);text-transform:capitalize;display:flex;justify-content:space-between}
+  .daygroup h3 .cnt{color:var(--ink-soft);font-weight:600;font-size:.76rem}
+  .lrow{display:grid;grid-template-columns:104px 1fr auto;gap:14px;align-items:center;padding:9px 10px;
+    border-bottom:1px solid var(--sand-line);border-left:3px solid;background:var(--paper);cursor:pointer}
+  .lrow .time{font-weight:700;font-size:.86rem;color:var(--ink)}
+  .lrow .meta .nm{font-weight:600;font-size:.93rem}
+  .lrow .meta .hs{font-size:.8rem;color:var(--ink-soft)}
+  .lrow .tag{font-size:.68rem;font-weight:700;padding:3px 9px;border-radius:20px;color:#fff;white-space:nowrap}
+  .empty{padding:40px;text-align:center;color:var(--ink-soft);font-size:.9rem}
+
+  .scrim{position:fixed;inset:0;background:rgba(10,45,50,.42);display:none;align-items:center;
+    justify-content:center;z-index:50;padding:20px}
+  .scrim.open{display:flex}
+  .modal{background:var(--paper);border-radius:14px;width:100%;max-width:430px;
+    box-shadow:0 20px 60px rgba(10,45,50,.35);overflow:hidden;max-height:92vh;display:flex;flex-direction:column}
+  .modal header{background:var(--sea-deep);padding:15px 20px;display:block;border-bottom:none}
+  .modal header h2{font-size:1.05rem;color:var(--paper);font-weight:700}
+  .modal header p{font-size:.76rem;color:#9fc4c8;margin-top:2px}
+  .mbody{padding:18px 20px;overflow-y:auto}
+  .field{margin-bottom:13px}
+  .field label{display:block;font-size:.74rem;font-weight:700;color:var(--ink-soft);
+    text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
+  .field input,.field select,.field textarea{width:100%;border:1px solid var(--sand-line);
+    border-radius:8px;padding:9px 11px;font-size:.9rem;font-family:inherit;background:#fff;color:var(--ink)}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:2px solid var(--sea);outline-offset:-1px}
+  .field textarea{resize:vertical;min-height:56px}
+  .frow{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+  .readview .rv{margin-bottom:12px}
+  .readview .rv .k{font-size:.72rem;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em}
+  .readview .rv .v{font-size:.96rem;margin-top:2px}
+  .readview .rv .v.big{font-size:1.15rem;font-weight:700}
+  .genretag{display:inline-block;font-size:.72rem;font-weight:700;color:#fff;padding:3px 11px;border-radius:20px;margin-top:3px}
+  .mfoot{padding:14px 20px;border-top:1px solid var(--sand-line);display:flex;gap:9px;justify-content:flex-end;align-items:center}
+  .mfoot .del{margin-right:auto}
+  button.btn{border:none;border-radius:8px;padding:9px 17px;font-size:.88rem;font-weight:600;cursor:pointer;font-family:inherit}
+  .btn.primary{background:var(--sea);color:#fff}
+  .btn.primary:hover{background:var(--sea-deep)}
+  .btn.ghost{background:var(--sand);color:var(--ink)}
+  .btn.ghost:hover{background:var(--sand-line)}
+  .btn.danger{background:none;color:var(--coral);padding:9px 6px}
+  .locked{font-size:.78rem;color:var(--ink-soft);text-align:center;padding:8px;background:var(--sand);border-radius:8px;margin-top:4px}
+
+  /* recurrence */
+  .recbox{border:1px solid var(--sand-line);border-radius:9px;padding:12px;background:#fff;margin-bottom:13px}
+  .recbox .rechd{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+  .recbox .rechd label{font-size:.74rem;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em;margin:0}
+  .recdetail{display:none}
+  .recdetail.show{display:block}
+  .presets{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:11px}
+  .preset{border:1px solid var(--sand-line);background:var(--sand);color:var(--ink-soft);
+    padding:5px 11px;border-radius:20px;font-size:.78rem;cursor:pointer;font-weight:600}
+  .preset:hover{border-color:var(--sea)}
+  .preset.on{background:var(--sea);color:#fff;border-color:var(--sea)}
+  .wdays{display:flex;gap:5px;margin-bottom:11px}
+  .wday{flex:1;text-align:center;padding:8px 0;border:1px solid var(--sand-line);border-radius:7px;
+    font-size:.78rem;font-weight:700;cursor:pointer;color:var(--ink-soft);background:var(--sand);user-select:none}
+  .wday.on{background:var(--sea);color:#fff;border-color:var(--sea)}
+  .wday.we{color:var(--coral)}
+  .wday.we.on{color:#fff}
+  .reccount{font-size:.78rem;color:var(--sea-deep);background:#e8f0f0;padding:7px 10px;
+    border-radius:7px;font-weight:600;margin-top:2px}
+
+  /* login modal */
+  .loginbox{max-width:340px}
+  .loginbox .mbody{padding:22px 20px}
+  .err{color:var(--coral);font-size:.82rem;margin-top:6px;display:none}
+  .err.show{display:block}
+
+  .statusbar{max-width:900px;margin:16px 28px 0;font-size:.76rem;color:var(--ink-soft);
+    display:flex;gap:18px;flex-wrap:wrap;align-items:center}
+
+  @media(max-width:820px){
+    .cell{min-height:88px}.search{width:130px}.brand h1{font-size:1.2rem}
+    .wrap{padding:16px 14px 0}header,.toolbar,.adminbar{padding-left:16px;padding-right:16px}
+    .statusbar{margin-left:16px;margin-right:16px}
+  }
+  @media(max-width:640px){
+    .month,.weekhead{display:none!important}.list{display:flex!important}.seg{display:none}
+    .monthnav .label{min-width:110px;font-size:.95rem}.clock{display:none}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <svg class="wave" viewBox="0 0 40 28"><path d="M2 14 Q6 4 10 14 T18 14 T26 14 T34 14 T38 14"/></svg>
+    <div><h1>Radio Liepāja</h1><div class="sub">Raidījumu grafiks</div></div>
+  </div>
+  <div class="hright">
+    <div class="clock">Šodien<b id="todayLabel">—</b></div>
+    <button class="loginlink" id="loginLink">Pieteikties</button>
+  </div>
+</header>
+
+<div class="adminbar" id="adminbar">
+  <b>Admin režīms</b> — vari labot, pievienot un pārvilkt raidījumus.
+  <span class="dirty" id="dirty">• nesaglabātas izmaiņas</span>
+  <div class="acts">
+    <button class="save" id="saveBtn">Saglabāt</button>
+    <button id="logoutBtn">Iziet</button>
+  </div>
+</div>
+
+<div class="toolbar">
+  <div class="monthnav">
+    <button id="prevM" title="Iepriekšējais">‹</button>
+    <span class="label" id="monthLabel">—</span>
+    <button id="nextM" title="Nākamais">›</button>
+  </div>
+  <button class="btn ghost" id="todayBtn" style="padding:7px 13px">Šodiena</button>
+  <div class="spacer"></div>
+  <input class="search" id="search" placeholder="Meklēt raidījumu / vadītāju…">
+  <div class="seg"><button id="gridBtn" class="on">Režģis</button><button id="listBtn">Saraksts</button></div>
+  <div class="filterwrap">
+    <button class="filterbtn" id="filterBtn"><span class="dot"></span>Žanri</button>
+    <div class="filtermenu" id="filterMenu"><h4>Rādīt žanrus</h4><div id="filterList"></div></div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="weekhead" id="weekhead"></div>
+  <div class="month" id="month"></div>
+  <div class="list" id="list"></div>
+  <div class="statusbar"><span id="countLabel">—</span></div>
+</div>
+
+<!-- show modal -->
+<div class="scrim" id="scrim">
+  <div class="modal">
+    <header><h2 id="mTitle">Raidījums</h2><p id="mDate">—</p></header>
+    <div class="mbody">
+      <div class="readview" id="readView"></div>
+      <div class="editview" id="editView" style="display:none">
+        <div class="field"><label>Raidījuma nosaukums</label><input id="fName" placeholder="piem. Rīta Osta"></div>
+        <div class="field"><label>Vadītājs</label><input id="fHost" placeholder="Vārds Uzvārds"></div>
+        <div class="frow">
+          <div class="field"><label>Sākums</label><input id="fStart" type="time"></div>
+          <div class="field"><label>Beigas</label><input id="fEnd" type="time"></div>
+        </div>
+        <div class="frow">
+          <div class="field"><label>Datums</label><input id="fDate" type="date"></div>
+          <div class="field"><label>Žanrs</label><select id="fGenre"></select></div>
+        </div>
+        <div class="field"><label>Statuss</label>
+          <select id="fStatus">
+            <option value="apstiprināts">Apstiprināts</option>
+            <option value="melnraksts">Melnraksts</option>
+            <option value="atcelts">Atcelts</option>
+          </select></div>
+        <div class="recbox" id="recBox">
+          <div class="rechd">
+            <input type="checkbox" id="fRepeat" style="width:auto;accent-color:var(--sea)">
+            <label for="fRepeat">Atkārtot raidījumu</label>
+          </div>
+          <div class="recdetail" id="recDetail">
+            <div class="presets">
+              <span class="preset" data-preset="daily">Katru dienu</span>
+              <span class="preset" data-preset="work">Darbadienās</span>
+              <span class="preset" data-preset="weekend">Nedēļas nogalēs</span>
+              <span class="preset" data-preset="custom">Izvēlēties</span>
+            </div>
+            <div class="wdays" id="wdays"></div>
+            <div class="field" style="margin-bottom:8px">
+              <label>Atkārtot līdz (ieskaitot)</label>
+              <input id="fUntil" type="date">
+            </div>
+            <div class="reccount" id="recCount">—</div>
+          </div>
+        </div>
+        <div class="field"><label>Apraksts</label><textarea id="fDesc" placeholder="Īss apraksts…"></textarea></div>
+      </div>
+      <div class="locked" id="lockedMsg" style="display:none">Piesakies kā <b>Admin</b>, lai labotu.</div>
+    </div>
+    <div class="mfoot" id="mFoot"></div>
+  </div>
+</div>
+
+<!-- login modal -->
+<div class="scrim" id="loginScrim">
+  <div class="modal loginbox">
+    <header><h2>Admin pieteikšanās</h2><p>Ievadi lietotājvārdu un paroli, lai labotu grafiku.</p></header>
+    <div class="mbody">
+      <div class="field"><label>Lietotājvārds</label><input id="luser" autocomplete="username"></div>
+      <div class="field"><label>Parole</label><input id="lpass" type="password" autocomplete="current-password"></div>
+      <div class="err" id="lerr">Nepareizs lietotājvārds vai parole.</div>
+    </div>
+    <div class="mfoot">
+      <button class="btn ghost" id="lcancel">Atcelt</button>
+      <button class="btn primary" id="ldo">Pieteikties</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   KONFIGURĀCIJA — maini šeit
+   ============================================================ */
+const CONFIG = {
+  // Admin akreditācija (skat. drošības piezīmi zemāk).
+  ADMIN_USER: "admin",
+  ADMIN_PASS: "liepaja2026",
+
+  // Kur glabājas dati. Fails "data.json" tajā pašā folderī.
+  DATA_URL: "data.json",
+
+  // Servera rakstīšanas endpoint. Ja tukšs ("") -> darbojas STATISKI:
+  //   admin labo un lejupielādē data.json, ko manuāli aizvieto folderī.
+  // Ja norādīts -> Saglabāt raksta tieši serverī caur Django.
+  SAVE_URL: "/api/grafiks/save"
+};
+
+/* ---------- konstantes ---------- */
+const GENRES={"Rīta ēteris":"#e08a2b","Mūzika":"#0f6d78","Saruna":"#7a4a6b",
+  "Ziņas":"#d15a3f","Kultūra":"#5a7a4a","Podkāsts":"#4a6580","Tiešraide":"#c0392b"};
+const DAYS=["Pirmdiena","Otrdiena","Trešdiena","Ceturtdiena","Piektdiena","Sestdiena","Svētdiena"];
+const DAYS_SHORT=["Pr","Ot","Tr","Ce","Pk","Se","Sv"];
+const MONTHS=["janvāris","februāris","marts","aprīlis","maijs","jūnijs","jūlijs","augusts","septembris","oktobris","novembris","decembris"];
+const iso=(y,m,d)=>`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+const todayISO=()=>new Date().toISOString().slice(0,10);
+const esc=t=>String(t||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+let shows=[], view=new Date(), mode="grid", admin=false, hidden=new Set(), editingId=null, dirty=false;
+
+/* ---------- datu ielāde ---------- */
+async function loadData(){
+  try{
+    const r=await fetch(CONFIG.DATA_URL,{cache:"no-store"});
+    if(!r.ok) throw 0;
+    const data=await r.json();
+    shows=data.map(s=>({id:s.id||crypto.randomUUID(),status:"apstiprināts",...s}));
+  }catch(e){
+    shows=seed(); // ja data.json vēl nav — parāda paraugu
+  }
+  render();
+}
+function markDirty(){dirty=true;document.getElementById('dirty').classList.add('show')}
+function clearDirty(){dirty=false;document.getElementById('dirty').classList.remove('show')}
+
+async function saveData(){
+  const clean=shows.map(({id,...r})=>r);
+  const json=JSON.stringify(clean,null,2);
+  if(CONFIG.SAVE_URL){
+    try{
+      // credentials:"include" -> pārlūks nosūta nginx Basic Auth akreditāciju,
+      // ko tas jau prasīja pie pirmā saglabāšanas mēģinājuma.
+      const r=await fetch(CONFIG.SAVE_URL,{method:"POST",
+        headers:{"Content-Type":"application/json"},
+        credentials:"include",
+        body:json});
+      if(!r.ok) throw 0;
+      clearDirty(); toast("Saglabāts serverī ✓");
+    }catch(e){ toast("Kļūda saglabājot serverī. Lejupielādēju rezerves failu.",true); downloadJson(json) }
+  }else{
+    downloadJson(json); clearDirty();
+    toast("Lejupielādēts data.json — aizvieto to folderī.");
+  }
+}
+function downloadJson(json){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([json],{type:'application/json'}));
+  a.download="data.json"; a.click();
+}
+function toast(msg,warn){
+  const t=document.createElement('div');
+  t.textContent=msg;
+  t.style.cssText=`position:fixed;bottom:22px;left:50%;transform:translateX(-50%);
+    background:${warn?'#d15a3f':'#0a4c54'};color:#fff;padding:11px 20px;border-radius:9px;
+    font-size:.86rem;z-index:100;box-shadow:0 8px 24px rgba(0,0,0,.25)`;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),3200);
+}
+
+function seed(){
+  const n=new Date(),y=n.getFullYear(),m=n.getMonth();
+  const P=(d,st,en,name,host,g,desc,status="apstiprināts")=>(
+    {id:crypto.randomUUID(),date:iso(y,m,d),start:st,end:en,name,host,genre:g,desc,status});
+  return [
+    P(2,"07:00","09:00","Rīta Osta","Ilze Bērziņa","Rīta ēteris","Rīta ziņas un mūzika."),
+    P(2,"12:00","13:00","Pusdienlaika Viļņi","Kārlis Ozols","Mūzika","Mūzikas izlase."),
+    P(2,"18:00","19:30","Vakara Saruna","Anna Kalniņa","Saruna","Intervija.","melnraksts"),
+    P(4,"20:00","22:00","Skaņu Molā","Dāvis Liepiņš","Tiešraide","Tiešraide no mola."),
+    P(9,"15:00","16:00","Kurzemes Stāsti","Māra Vītola","Kultūra","Reģiona mantojums."),
+    P(11,"10:00","11:00","Ziņu Stunda","Redakcija","Ziņas","Nedēļas apskats."),
+  ];
+}
+
+/* ---------- render (tāpat kā prototipā) ---------- */
+const monthEl=document.getElementById('month'),weekheadEl=document.getElementById('weekhead'),
+  listEl=document.getElementById('list'),monthLabel=document.getElementById('monthLabel');
+
+function passesFilter(s){
+  if(hidden.has(s.genre))return false;
+  const q=document.getElementById('search').value.trim().toLowerCase();
+  if(q&&!(s.name.toLowerCase().includes(q)||s.host.toLowerCase().includes(q)))return false;
+  return true;
+}
+const sortShows=(a,b)=>(a.date+a.start).localeCompare(b.date+b.start);
+
+function render(){
+  const y=view.getFullYear(),m=view.getMonth();
+  monthLabel.textContent=`${MONTHS[m]} ${y}`;
+  document.getElementById('todayLabel').textContent=new Date().toLocaleDateString('lv-LV',{day:'numeric',month:'long'});
+  weekheadEl.innerHTML=DAYS_SHORT.map((d,i)=>`<span class="${i>=5?'we':''}">${d}</span>`).join('');
+  weekheadEl.classList.toggle('off',mode!=="grid");
+  mode==="grid"?renderGrid(y,m):renderList(y,m);
+  const pre=`${y}-${String(m+1).padStart(2,'0')}`;
+  const all=shows.filter(s=>s.date.startsWith(pre)),vis=all.filter(passesFilter);
+  document.getElementById('countLabel').textContent=`${vis.length} no ${all.length} raidījumiem redzami · ${MONTHS[m]}`;
+  document.body.classList.toggle('admin',admin);
+}
+function renderGrid(y,m){
+  monthEl.classList.remove('off');listEl.classList.remove('on');
+  const first=new Date(y,m,1);let startDow=(first.getDay()+6)%7;
+  const daysIn=new Date(y,m+1,0).getDate(),prevDays=new Date(y,m,0).getDate();
+  let cells="";const today=todayISO();
+  for(let i=startDow-1;i>=0;i--)cells+=`<div class="cell dim"><div class="dnum">${prevDays-i}</div></div>`;
+  for(let d=1;d<=daysIn;d++){
+    const dISO=iso(y,m,d);
+    const ds=shows.filter(s=>s.date===dISO&&passesFilter(s)).sort(sortShows);
+    cells+=`<div class="cell${dISO===today?' today':''}" data-date="${dISO}">
+      <div class="dnum"><span>${d}</span><button class="addbtn" data-add="${dISO}" title="Pievienot">＋</button></div>
+      <div class="shows">${ds.map(showChip).join('')}</div></div>`;
+  }
+  const total=startDow+daysIn,trail=(7-(total%7))%7;
+  for(let i=1;i<=trail;i++)cells+=`<div class="cell dim"><div class="dnum">${i}</div></div>`;
+  monthEl.innerHTML=cells;wireGrid();
+}
+function showChip(s){
+  const col=GENRES[s.genre]||'#888';
+  const op=s.status==='atcelts'?'opacity:.45;text-decoration:line-through;':'';
+  const dr=s.status==='melnraksts'?'border-style:dashed;':'';
+  return `<div class="show" draggable="${admin}" data-id="${s.id}"
+    style="border-left-color:${col};background:${col}18;${op}${dr}">
+    <span class="t">${s.start}</span><span class="n">${esc(s.name)}</span><span class="h">${esc(s.host)}</span></div>`;
+}
+function renderList(y,m){
+  monthEl.classList.add('off');listEl.classList.add('on');
+  const ms=shows.filter(s=>s.date.startsWith(`${y}-${String(m+1).padStart(2,'0')}`)&&passesFilter(s)).sort(sortShows);
+  if(!ms.length){listEl.innerHTML=`<div class="empty">Šajā mēnesī nav raidījumu, kas atbilst filtram.</div>`;return}
+  const byDay={};ms.forEach(s=>{(byDay[s.date]=byDay[s.date]||[]).push(s)});
+  let html="";
+  Object.keys(byDay).sort().forEach(date=>{
+    const dt=new Date(date+"T00:00"),dow=DAYS[(dt.getDay()+6)%7];
+    html+=`<div class="daygroup"><h3>${dow}, ${dt.getDate()}. ${MONTHS[dt.getMonth()]}<span class="cnt">${byDay[date].length} raidījumi</span></h3>`;
+    byDay[date].forEach(s=>{
+      const col=GENRES[s.genre]||'#888',op=s.status==='atcelts'?'opacity:.5;':'';
+      html+=`<div class="lrow" data-id="${s.id}" style="border-left-color:${col};${op}">
+        <div class="time">${s.start}–${s.end}</div>
+        <div class="meta"><div class="nm">${esc(s.name)}${s.status==='melnraksts'?' · <span style="color:#e08a2b">melnraksts</span>':''}</div>
+        <div class="hs">${esc(s.host)}</div></div>
+        <div class="tag" style="background:${col}">${s.genre}</div></div>`;
+    });
+    html+=`</div>`;
+  });
+  listEl.innerHTML=html;
+  listEl.querySelectorAll('.lrow').forEach(r=>r.onclick=()=>openModal(r.dataset.id));
+}
+function wireGrid(){
+  monthEl.querySelectorAll('.show').forEach(el=>{
+    el.onclick=()=>{if(!el.classList.contains('dragging'))openModal(el.dataset.id)};
+    el.ondragstart=e=>{if(!admin)return;el.classList.add('dragging');e.dataTransfer.setData('id',el.dataset.id)};
+    el.ondragend=()=>el.classList.remove('dragging');
+  });
+  monthEl.querySelectorAll('.addbtn').forEach(b=>b.onclick=e=>{e.stopPropagation();newShow(b.dataset.add)});
+  monthEl.querySelectorAll('.cell[data-date]').forEach(c=>{
+    c.ondragover=e=>{if(admin){e.preventDefault();c.classList.add('draghover')}};
+    c.ondragleave=()=>c.classList.remove('draghover');
+    c.ondrop=e=>{e.preventDefault();c.classList.remove('draghover');
+      const id=e.dataTransfer.getData('id'),s=shows.find(x=>x.id===id);
+      if(s&&s.date!==c.dataset.date){s.date=c.dataset.date;markDirty();render()}};
+  });
+}
+
+/* ---------- modal ---------- */
+const scrim=document.getElementById('scrim');
+['fName','fHost','fStart','fEnd','fDate','fGenre','fStatus','fDesc','fRepeat','fUntil'].forEach(id=>window[id]=document.getElementById(id));
+function openModal(id){
+  const s=shows.find(x=>x.id===id);if(!s)return;editingId=id;
+  document.getElementById('mTitle').textContent=admin?'Labot raidījumu':s.name;
+  const dt=new Date(s.date+"T00:00");
+  document.getElementById('mDate').textContent=`${DAYS[(dt.getDay()+6)%7]}, ${dt.getDate()}. ${MONTHS[dt.getMonth()]} ${dt.getFullYear()}`;
+  admin?showEdit(s):showRead(s);scrim.classList.add('open');
+}
+function showRead(s){
+  editView.style.display='none';document.getElementById('lockedMsg').style.display='block';
+  const rv=document.getElementById('readView');rv.style.display='block';
+  const col=GENRES[s.genre]||'#888';
+  rv.innerHTML=`<div class="rv"><div class="k">Raidījums</div><div class="v big">${esc(s.name)}</div>
+    <span class="genretag" style="background:${col}">${s.genre}</span></div>
+    <div class="rv"><div class="k">Laiks</div><div class="v">${s.start}–${s.end}</div></div>
+    <div class="rv"><div class="k">Vadītājs</div><div class="v">${esc(s.host)}</div></div>
+    ${s.desc?`<div class="rv"><div class="k">Apraksts</div><div class="v">${esc(s.desc)}</div></div>`:''}`;
+  document.getElementById('mFoot').innerHTML=`<button class="btn primary" onclick="closeModal()">Aizvērt</button>`;
+}
+const editView=document.getElementById('editView');
+let isNewShow=false;              // atkārtošana pieejama tikai jauniem raidījumiem
+const WD_SHORT=["Pr","Ot","Tr","Ce","Pk","Se","Sv"];  // Pirmdiena=0 .. Svētdiena=6
+let recDays=new Set();            // atzīmētās nedēļas dienas (0..6)
+
+function buildWdays(){
+  const w=document.getElementById('wdays');
+  w.innerHTML=WD_SHORT.map((d,i)=>
+    `<div class="wday${i>=5?' we':''}" data-wd="${i}">${d}</div>`).join('');
+  w.querySelectorAll('.wday').forEach(el=>el.onclick=()=>{
+    const i=+el.dataset.wd;
+    recDays.has(i)?recDays.delete(i):recDays.add(i);
+    syncWdayUI(); setPresetHighlight(null); updateRecCount();
+  });
+}
+function syncWdayUI(){
+  document.querySelectorAll('#wdays .wday').forEach(el=>
+    el.classList.toggle('on',recDays.has(+el.dataset.wd)));
+}
+function setPresetHighlight(name){
+  document.querySelectorAll('.preset').forEach(p=>
+    p.classList.toggle('on',p.dataset.preset===name));
+}
+function applyPreset(name){
+  if(name==='daily')   recDays=new Set([0,1,2,3,4,5,6]);
+  else if(name==='work')    recDays=new Set([0,1,2,3,4]);
+  else if(name==='weekend') recDays=new Set([5,6]);
+  else if(name==='custom')  { /* atstāj kā ir, ļauj rokā izvēlēties */ }
+  syncWdayUI(); setPresetHighlight(name); updateRecCount();
+}
+function genDates(startISO,untilISO,daysSet){
+  const out=[]; if(!startISO||!untilISO) return out;
+  let d=new Date(startISO+"T00:00"), end=new Date(untilISO+"T00:00");
+  if(end<d) return out;
+  let guard=0;
+  while(d<=end && guard++<1000){
+    const wd=(d.getDay()+6)%7;           // Pirmdiena=0
+    if(daysSet.has(wd)) out.push(iso(d.getFullYear(),d.getMonth(),d.getDate()));
+    d.setDate(d.getDate()+1);
+  }
+  return out;
+}
+function updateRecCount(){
+  const el=document.getElementById('recCount');
+  if(!fRepeat.checked){el.textContent='—';return}
+  const dates=genDates(fDate.value,fUntil.value,recDays);
+  if(!recDays.size){el.textContent='Izvēlies vismaz vienu nedēļas dienu.';return}
+  if(!fUntil.value){el.textContent='Norādi beigu datumu.';return}
+  el.textContent=`Tiks izveidoti ${dates.length} raidījumi (${dates.length? dates[0]+' … '+dates[dates.length-1] : '—'}).`;
+}
+
+function showEdit(s){
+  document.getElementById('readView').style.display='none';document.getElementById('lockedMsg').style.display='none';
+  editView.style.display='block';
+  fGenre.innerHTML=Object.keys(GENRES).map(g=>`<option>${g}</option>`).join('');
+  fName.value=s.name;fHost.value=s.host;fStart.value=s.start;fEnd.value=s.end;
+  fDate.value=s.date;fGenre.value=s.genre;fStatus.value=s.status;fDesc.value=s.desc||'';
+  // atkārtošana — tikai jauniem; esošu labo kā vienu ierakstu
+  const recBox=document.getElementById('recBox');
+  recBox.style.display=isNewShow?'block':'none';
+  fRepeat.checked=false;
+  document.getElementById('recDetail').classList.remove('show');
+  recDays=new Set(); syncWdayUI(); setPresetHighlight(null);
+  fUntil.value='';
+  document.getElementById('mFoot').innerHTML=
+    `<button class="btn danger del" onclick="delShow()">Dzēst</button>
+     <button class="btn ghost" onclick="closeModal()">Atcelt</button>
+     <button class="btn primary" onclick="saveShow()">${isNewShow?'Pievienot':'Labot'}</button>`;
+}
+function newShow(date){
+  isNewShow=true;
+  const s={id:crypto.randomUUID(),date,start:"12:00",end:"13:00",name:"",host:"",
+    genre:Object.keys(GENRES)[0],desc:"",status:"melnraksts"};
+  shows.push(s);openModal(s.id);
+}
+function saveShow(){
+  const s=shows.find(x=>x.id===editingId);if(!s)return;
+  if(!fName.value.trim()){fName.focus();return}
+  const base={name:fName.value.trim(),host:fHost.value.trim(),start:fStart.value,end:fEnd.value,
+    genre:fGenre.value,status:fStatus.value,desc:fDesc.value.trim()};
+
+  // --- atkārtošana: izvērš atsevišķos ierakstos ---
+  if(isNewShow && fRepeat.checked && recDays.size && fUntil.value){
+    const dates=genDates(fDate.value,fUntil.value,recDays);
+    if(!dates.length){updateRecCount();return}
+    // noņem pagaidu "melnrakstu", kas tika radīts newShow
+    shows=shows.filter(x=>x.id!==editingId);
+    dates.forEach(dt=>shows.push({id:crypto.randomUUID(),date:dt,...base}));
+    isNewShow=false;markDirty();render();closeModal();
+    toast(`Izveidoti ${dates.length} raidījumi ✓`);
+    return;
+  }
+
+  // --- viens ieraksts (parastā labošana / pievienošana) ---
+  Object.assign(s,{date:fDate.value,...base});
+  isNewShow=false;markDirty();render();closeModal();
+}
+function delShow(){shows=shows.filter(x=>x.id!==editingId);markDirty();render();closeModal()}
+function closeModal(){
+  const s=shows.find(x=>x.id===editingId);
+  if(s&&!s.name.trim())shows=shows.filter(x=>x.id!==editingId);
+  scrim.classList.remove('open');editingId=null;isNewShow=false;
+}
+scrim.onclick=e=>{if(e.target===scrim)closeModal()};
+
+/* --- atkārtošanas vadība --- */
+buildWdays();
+fRepeat.onchange=()=>{
+  document.getElementById('recDetail').classList.toggle('show',fRepeat.checked);
+  if(fRepeat.checked && !fUntil.value){
+    // noklusējums: līdz mēneša beigām no izvēlētā datuma
+    const d=new Date(fDate.value+"T00:00");
+    const last=new Date(d.getFullYear(),d.getMonth()+1,0);
+    fUntil.value=iso(last.getFullYear(),last.getMonth(),last.getDate());
+  }
+  updateRecCount();
+};
+document.querySelectorAll('.preset').forEach(p=>p.onclick=()=>applyPreset(p.dataset.preset));
+fUntil.onchange=updateRecCount;
+fDate.addEventListener('change',()=>{if(fRepeat.checked)updateRecCount()});
+
+/* ---------- login ---------- */
+const loginScrim=document.getElementById('loginScrim');
+document.getElementById('loginLink').onclick=()=>{
+  if(admin){return} loginScrim.classList.add('open');
+  document.getElementById('luser').focus();
+};
+document.getElementById('lcancel').onclick=()=>loginScrim.classList.remove('open');
+loginScrim.onclick=e=>{if(e.target===loginScrim)loginScrim.classList.remove('open')};
+document.getElementById('ldo').onclick=doLogin;
+document.getElementById('lpass').onkeydown=e=>{if(e.key==='Enter')doLogin()};
+function doLogin(){
+  const u=document.getElementById('luser').value,p=document.getElementById('lpass').value;
+  if(u===CONFIG.ADMIN_USER&&p===CONFIG.ADMIN_PASS){
+    admin=true;
+    document.getElementById('adminbar').classList.add('show');
+    document.getElementById('loginLink').textContent='Admin ✓';
+    document.getElementById('loginLink').classList.add('admin');
+    loginScrim.classList.remove('open');
+    document.getElementById('lerr').classList.remove('show');
+    document.getElementById('lpass').value='';
+    render();
+  }else{document.getElementById('lerr').classList.add('show')}
+}
+document.getElementById('logoutBtn').onclick=()=>{
+  if(dirty&&!confirm('Ir nesaglabātas izmaiņas. Iziet tik un tā?'))return;
+  admin=false;
+  document.getElementById('adminbar').classList.remove('show');
+  document.getElementById('loginLink').textContent='Pieteikties';
+  document.getElementById('loginLink').classList.remove('admin');
+  clearDirty();loadData();
+};
+document.getElementById('saveBtn').onclick=saveData;
+window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue=''}});
+
+/* ---------- filtri + kontroles ---------- */
+function buildFilters(){
+  const fl=document.getElementById('filterList');
+  fl.innerHTML=Object.entries(GENRES).map(([g,c])=>
+    `<label class="fitem"><span class="sw" style="background:${c}"></span>${g}
+      <input type="checkbox" data-g="${g}" checked></label>`).join('');
+  fl.querySelectorAll('input').forEach(cb=>cb.onchange=()=>{
+    cb.checked?hidden.delete(cb.dataset.g):hidden.add(cb.dataset.g);
+    document.getElementById('filterBtn').classList.toggle('active',hidden.size>0);render();
+  });
+}
+document.getElementById('filterBtn').onclick=e=>{e.stopPropagation();document.getElementById('filterMenu').classList.toggle('open')};
+document.onclick=e=>{if(!e.target.closest('.filterwrap'))document.getElementById('filterMenu').classList.remove('open')};
+document.getElementById('prevM').onclick=()=>{view.setMonth(view.getMonth()-1);render()};
+document.getElementById('nextM').onclick=()=>{view.setMonth(view.getMonth()+1);render()};
+document.getElementById('todayBtn').onclick=()=>{view=new Date();render()};
+document.getElementById('gridBtn').onclick=()=>{mode="grid";seg();render()};
+document.getElementById('listBtn').onclick=()=>{mode="list";seg();render()};
+function seg(){document.getElementById('gridBtn').classList.toggle('on',mode==="grid");
+  document.getElementById('listBtn').classList.toggle('on',mode==="list")}
+document.getElementById('search').oninput=render;
+
+buildFilters();seg();loadData();
+</script>
+</body>
+</html>
