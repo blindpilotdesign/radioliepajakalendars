@@ -1,0 +1,11 @@
+Radio Liepāja grafiks — Coolify (FastAPI) versija
+Versija: 1.0-coolify (2026-09-03)
+
+Notestēts lokāli pirms piegādes:
+- /health, /, /data.json strādā
+- POST bez auth -> 401
+- POST nepareiza parole -> 401
+- POST pareiza parole -> saglabā, count OK
+- Validācija: lieki lauki noņemti, nederīgs statuss -> melnraksts
+- Atomiska rakstīšana (temp + replace)
+- Persistent volume /data
