@@ -1,0 +1,16 @@
+# Coolify: New Resource -> Docker Compose (ielīmē šo saturu)
+services:
+  grafiks:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DATA_DIR=/data
+      - ADMIN_USER=admin
+      - ADMIN_PASS=nomaini_so_paroli
+    volumes:
+      - grafiks_data:/data          # persistent volume — dati pārdzīvo restartus
+    restart: unless-stopped
+
+volumes:
+  grafiks_data:
